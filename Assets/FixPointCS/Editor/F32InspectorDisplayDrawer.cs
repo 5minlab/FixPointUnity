@@ -122,25 +122,25 @@ namespace FixMath.UniRx
 
 		protected virtual void EmitPropertyField(Rect position, SerializedProperty targetSerializedProperty, GUIContent label)
 		{
-			EditorGUI.BeginProperty(position, label, targetSerializedProperty);
-
-			// 마지막 이름은 F32 내부값이다. 그것까지 읽을 필요는 없다
 			var tokens = targetSerializedProperty.propertyPath.Split('.').ToList();
-			tokens.RemoveAt(tokens.Count - 1);
-
 			System.Object obj = targetSerializedProperty.serializedObject.targetObject;
 			foreach (var fieldName in tokens)
 			{
-				var field = obj.GetType().GetField(fieldName);
+				var flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+				var field = obj.GetType().GetField(fieldName, flags);
 				var inner = field.GetValue(obj);
-				obj = inner;
+
+				if (inner == null) { return; }
+				else { obj = inner; }
+				if (inner.GetType() == typeof(F32ReactiveProperty)) { break; }
 			}
 
-			var fval = (F32ReactiveProperty)Convert.ChangeType(obj, typeof(F32ReactiveProperty));
+			var fval = obj as F32ReactiveProperty;
 			var prev = fval.Value.Float;
+
+			EditorGUI.BeginProperty(position, label, targetSerializedProperty);
 			float next = EditorGUI.FloatField(position, label.text, prev);
 			fval.Value = new F32(next);
-
 			EditorGUI.EndProperty();
 		}
 	}
