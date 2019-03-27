@@ -7,25 +7,44 @@ using System;
 
 public class DemoUniRxFixMath : MonoBehaviour
 {
-	public F32ReactiveProperty rx;
+	[Serializable]
+	public class Inner
+	{
+		public F32ReactiveProperty val;
+	}
 
-	public Text text_rx;
+	[Serializable]
+	public class Deep
+	{
+		public Inner container;
+	}
+
+	public F32ReactiveProperty root;
+	public Inner inner;
+	public Deep deep;
+
+	public Text text_root;
+	public Text text_inner;
+	public Text text_deep;
 	public Button button_random;
 
 	void Awake()
 	{
-		Debug.Assert(text_rx != null);
+		Debug.Assert(text_root != null);
+		Debug.Assert(text_inner != null);
+		Debug.Assert(text_deep != null);
 		Debug.Assert(button_random != null);
 	}
 
 	void Start()
 	{
-		rx = new F32ReactiveProperty(F32.One);
+		root = new F32ReactiveProperty(F32.One);
+		inner.val = new F32ReactiveProperty(F32.One);
+		deep.container.val = new F32ReactiveProperty(F32.One);
 
-		rx.Subscribe(v =>
-		{
-			text_rx.text = $"rx: {v.Float}";
-		}).AddTo(gameObject);
+		root.Subscribe(v => text_root.text = $"root: {v.Float}").AddTo(gameObject);
+		inner.val.Subscribe(v => text_inner.text = $"inner: {v.Float}").AddTo(gameObject);
+		deep.container.val.Subscribe(v => text_deep.text = $"deep: {v.Float}").AddTo(gameObject);
 
 		button_random.OnClickAsObservable()
 		.Subscribe(_ => SetAsRandom())
@@ -34,6 +53,8 @@ public class DemoUniRxFixMath : MonoBehaviour
 
 	void SetAsRandom()
 	{
-		rx.Value = new F32(UnityEngine.Random.Range(0.0f, 100.0f));
+		root.Value = new F32(UnityEngine.Random.Range(0.0f, 100.0f));
+		inner.val.Value = new F32(UnityEngine.Random.Range(0.0f, 100.0f));
+		deep.container.val.Value = new F32(UnityEngine.Random.Range(0.0f, 100.0f));
 	}
 }

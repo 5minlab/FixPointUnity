@@ -10,7 +10,7 @@ using FixMath;
 namespace FixMath.UniRx
 {
 	// InspectorDisplayDrawer 내용 갈아치워서 렌더링 규격을 F32에 맞추고 싶다
-	// [UnityEditor.CustomPropertyDrawer(typeof(F32ReactiveProperty))]
+	[UnityEditor.CustomPropertyDrawer(typeof(F32ReactiveProperty))]
 	public class ExtendInspectorDisplayDrawer : UnityEditor.PropertyDrawer
 	{
 		public override void OnGUI(Rect position, UnityEditor.SerializedProperty property, GUIContent label)
@@ -39,7 +39,7 @@ namespace FixMath.UniRx
 			}
 			else
 			{
-				EmitPropertyField(position, targetSerializedProperty, label, property.name);
+				EmitPropertyField(position, targetSerializedProperty, label);
 			}
 
 			if (notifyPropertyChanged)
@@ -120,13 +120,23 @@ namespace FixMath.UniRx
 			return height;
 		}
 
-		protected virtual void EmitPropertyField(Rect position, UnityEditor.SerializedProperty targetSerializedProperty, GUIContent label, string fieldName)
+		protected virtual void EmitPropertyField(Rect position, SerializedProperty targetSerializedProperty, GUIContent label)
 		{
 			EditorGUI.BeginProperty(position, label, targetSerializedProperty);
 
-			var obj = targetSerializedProperty.serializedObject.targetObject;
-			var field = obj.GetType().GetField(fieldName);
-			var fval = (F32ReactiveProperty)Convert.ChangeType(field.GetValue(obj), typeof(F32ReactiveProperty));
+			// 마지막 이름은 F32 내부값이다. 그것까지 읽을 필요는 없다
+			var tokens = targetSerializedProperty.propertyPath.Split('.').ToList();
+			tokens.RemoveAt(tokens.Count - 1);
+
+			System.Object obj = targetSerializedProperty.serializedObject.targetObject;
+			foreach (var fieldName in tokens)
+			{
+				var field = obj.GetType().GetField(fieldName);
+				var inner = field.GetValue(obj);
+				obj = inner;
+			}
+
+			var fval = (F32ReactiveProperty)Convert.ChangeType(obj, typeof(F32ReactiveProperty));
 			var prev = fval.Value.Float;
 			float next = EditorGUI.FloatField(position, label.text, prev);
 			fval.Value = new F32(next);
