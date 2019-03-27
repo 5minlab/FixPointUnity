@@ -1,0 +1,4 @@
+hash 5b3a2c4ee6256e73178441f2dd63e9da4e18964e
+https://github.com/XMunkki/FixPointCS/commit/5b3a2c4ee6256e73178441f2dd63e9da4e18964e
+
+.net framework 4.5 + release build
